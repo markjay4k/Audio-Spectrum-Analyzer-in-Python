@@ -10,7 +10,8 @@ If you don't have pyOpenGL or opensimplex, then:
 """
 
 import numpy as np
-from pyqtgraph.Qt import QtCore, QtGui
+import opensimplex
+from pyqtgraph.Qt import QtCore, QtWidgets
 import pyqtgraph.opengl as gl
 import sys
 from opensimplex import OpenSimplex
@@ -23,12 +24,12 @@ class Terrain(object):
         """
 
         # setup the view window
-        self.app = QtGui.QApplication(sys.argv)
-        self.w = gl.GLViewWidget()
-        self.w.setGeometry(0, 110, 1920, 1080)
-        self.w.show()
-        self.w.setWindowTitle('Terrain')
-        self.w.setCameraPosition(distance=30, elevation=8)
+        self.app = QtWidgets.QApplication(sys.argv)
+        self.window = gl.GLViewWidget()
+        self.window.setGeometry(0, 110, 1920, 1080)
+        self.window.show()
+        self.window.setWindowTitle('Terrain')
+        self.window.setCameraPosition(distance=30, elevation=-15)
 
         # constants and arrays
         self.nsteps = 1
@@ -38,12 +39,12 @@ class Terrain(object):
         self.offset = 0
 
         # perlin noise object
-        self.tmp = OpenSimplex()
+        self.noise = OpenSimplex()
 
         # create the veritices array
         verts = np.array([
             [
-                x, y, 1.5 * self.tmp.noise2d(x=n / 5, y=m / 5)
+                x, y, 1.5 * self.noise.noise2(x=n / 5, y=m / 5)
             ] for n, x in enumerate(self.xpoints) for m, y in enumerate(self.ypoints)
         ], dtype=np.float32)
 
@@ -62,13 +63,18 @@ class Terrain(object):
         colors = np.array(colors)
 
         # create the mesh item
-        self.m1 = gl.GLMeshItem(
+        self.mesh1 = gl.GLMeshItem(
             vertexes=verts,
             faces=faces, faceColors=colors,
-            smooth=False, drawEdges=True,
+            smooth=False, drawEdges=False,
         )
-        self.m1.setGLOptions('additive')
-        self.w.addItem(self.m1)
+
+        # "additive"
+        # "opaque"
+        # "translucent"
+        option = "opaque"
+        self.mesh1.setGLOptions(option)
+        self.window.addItem(self.mesh1)
 
     def update(self):
         """
@@ -76,7 +82,7 @@ class Terrain(object):
         """
         verts = np.array([
             [
-                x, y, 2.5 * self.tmp.noise2d(x=n / 5 + self.offset, y=m / 5 + self.offset)
+                x, y, 2.5 * self.noise.noise2(x=n / 5 + self.offset, y=m / 5 + self.offset)
             ] for n, x in enumerate(self.xpoints) for m, y in enumerate(self.ypoints)
         ], dtype=np.float32)
 
@@ -93,7 +99,7 @@ class Terrain(object):
         faces = np.array(faces, dtype=np.uint32)
         colors = np.array(colors, dtype=np.float32)
 
-        self.m1.setMeshData(
+        self.mesh1.setMeshData(
             vertexes=verts, faces=faces, faceColors=colors
         )
         self.offset -= 0.18
@@ -103,7 +109,7 @@ class Terrain(object):
         get the graphics window open and setup
         """
         if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-            QtGui.QApplication.instance().exec_()
+            QtWidgets.QApplication.instance().exec_()
 
     def animation(self):
         """
