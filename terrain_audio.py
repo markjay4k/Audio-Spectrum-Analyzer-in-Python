@@ -12,7 +12,8 @@ If you don't have pyOpenGL or opensimplex, then:
 import numpy as np
 from opensimplex import OpenSimplex
 import pyqtgraph.opengl as gl
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore#, QtGui
+from PyQt5 import QtWidgets #Fixes issue with QtGui has no attribute QApplication
 import struct
 import pyaudio
 import sys
@@ -25,7 +26,7 @@ class Terrain(object):
         """
 
         # setup the view window
-        self.app = QtGui.QApplication(sys.argv)
+        self.app = QtWidgets.QApplication(sys.argv)
         self.window = gl.GLViewWidget()
         self.window.setWindowTitle('Terrain')
         self.window.setGeometry(0, 110, 1920, 1080)
@@ -129,7 +130,7 @@ class Terrain(object):
         get the graphics window open and setup
         """
         if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-            QtGui.QApplication.instance().exec_()
+            QtWidgets.QApplication.instance().exec_()
 
     def animation(self, frametime=10):
         """
